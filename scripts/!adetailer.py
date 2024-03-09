@@ -639,33 +639,6 @@ class AfterDetailerScript(scripts.Script):
     def is_img2img_inpaint(p) -> bool:
         return hasattr(p, "image_mask") and bool(p.image_mask)
 
-    @rich_traceback
-    def process(self, p, *args_):
-        if getattr(p, "_ad_disabled", False):
-            return
-
-        if self.is_img2img_inpaint(p):
-            p._ad_disabled = True
-            msg = "[-] ADetailer: img2img inpainting detected. adetailer disabled."
-            print(msg)
-            return
-
-        if self.is_ad_enabled(*args_):
-            arg_list = self.get_args(p, *args_)
-            self.check_skip_img2img(p, *args_)
-
-            if hasattr(p, "_ad_xyz_prompt_sr"):
-                replaced_positive_prompt, replaced_negative_prompt = self.get_prompt(
-                    p, arg_list[0]
-                )
-                arg_list[0].ad_prompt = replaced_positive_prompt[0]
-                arg_list[0].ad_negative_prompt = replaced_negative_prompt[0]
-
-            extra_params = self.extra_params(arg_list)
-            p.extra_generation_params.update(extra_params)
-        else:
-            p._ad_disabled = True
-
     def _postprocess_image_inner(
         self, p, pp, args: ADetailerArgs, *, n: int = 0
     ) -> bool:

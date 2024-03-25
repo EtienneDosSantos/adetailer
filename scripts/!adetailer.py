@@ -652,30 +652,7 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def is_img2img_inpaint(p) -> bool:
-        return hasattr(p, "image_mask") and p.image_mask is not None
-
-    @staticmethod
-    def is_inpaint_only_masked(p) -> bool:
-        return hasattr(p, "inpaint_full_res") and p.inpaint_full_res
-
-    @staticmethod
-    def inpaint_mask_filter(
-        img2img_mask: Image.Image, ad_mask: list[Image.Image]
-    ) -> list[Image.Image]:
-        return [mask for mask in ad_mask if has_intersection(img2img_mask, mask)]
-
-    @staticmethod
-    def get_image_mask(p) -> Image.Image:
-        mask = p.image_mask
-        if p.inpainting_mask_invert:
-            mask = ImageChops.invert(mask)
-        mask = create_binary_mask(mask)
-
-        if getattr(p, "_ad_skip_img2img", False):
-            width, height = p.init_images[0].size
-        else:
-            width, height = p.width, p.height
-        return images.resize_image(p.resize_mode, mask, width, height)
+        return hasattr(p, "image_mask") and bool(p.image_mask)
 
     def _postprocess_image_inner(
         self, p, pp, args: ADetailerArgs, *, n: int = 0

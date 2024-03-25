@@ -1,5 +1,24 @@
 # Changelog
 
+## 2024-03-25
+
+- v24.3.3
+- Fixed ImportError for the create_binary_mask function in versions below webui 1.6.0
+
+## 2024-03-21
+
+- v24.3.2
+- Fixed opencv error when inputting image_mask without going through UI
+- When enabling skip img2img option in img2img inpaint, adetailer is disabled
+  - There is a hard-to-solve issue regarding the size of the mask
+
+## 2024-03-16
+
+- v24.3.1
+- Updated ultralytics to support YOLO World v2, YOLO9 versions
+- Changed to operate in inpaint mode when inpaint full res
+- When not inpaint full res, only select masks that intersect with the mask entered by the user
+
 ## March 1, 2024
 
 - v24.3.0

@@ -221,6 +221,28 @@ class AfterDetailerScript(scripts.Script):
         else:
             p._ad_skip_img2img = False
 
+        if not p._ad_skip_img2img:
+            return
+
+        if self.is_img2img_inpaint(p):
+            p._ad_disabled = True
+            msg = "[-] ADetailer: img2img inpainting with skip img2img is not supported. (because it's buggy)"
+            print(msg)
+            return
+
+        p._ad_orig = SkipImg2ImgOrig(
+            steps=p.steps,
+            sampler_name=p.sampler_name,
+            width=p.width,
+            height=p.height,
+        )
+        p.steps = 1
+        p.sampler_name = "Euler"
+        p.width = 128
+        p.height = 128
+
+
+
     @staticmethod
     def get_i(p) -> int:
         it = p.iteration

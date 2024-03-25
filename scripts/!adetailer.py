@@ -597,10 +597,13 @@ class AfterDetailerScript(scripts.Script):
             merge_invert=args.ad_mask_merge_invert,
         )
         
-        if self.is_img2img_inpaint(p) and not self.is_inpaint_only_masked(p):
-            image_mask = self.get_image_mask(p)
-            masks = self.inpaint_mask_filter(image_mask, masks)
-        return masks
+    @staticmethod
+    def ensure_rgb_image(image: Any):
+        if not isinstance(image, Image.Image):
+            image = to_pil_image(image)
+        if image.mode != "RGB":
+            image = image.convert("RGB")
+        return image
 
     @staticmethod
     def i2i_prompts_replace(

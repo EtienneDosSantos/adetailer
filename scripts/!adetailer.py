@@ -208,7 +208,7 @@ class AfterDetailerScript(scripts.Script):
         not_none = any(arg.get("ad_model", "None") != "None" for arg in arg_list)
         return ad_enabled and not_none
 
-    def check_skip_img2img(self, p, *args_) -> None:
+    def set_skip_img2img(self, p, *args_) -> None:
         if (
             hasattr(p, "_ad_skip_img2img")
             or not hasattr(p, "init_images")
@@ -218,17 +218,6 @@ class AfterDetailerScript(scripts.Script):
 
         if len(args_) >= 2 and isinstance(args_[1], bool):
             p._ad_skip_img2img = args_[1]
-            if args_[1]:
-                p._ad_orig = SkipImg2ImgOrig(
-                    steps=p.steps,
-                    sampler_name=p.sampler_name,
-                    width=p.width,
-                    height=p.height,
-                )
-                p.steps = 1
-                p.sampler_name = "Euler"
-                p.width = 128
-                p.height = 128
         else:
             p._ad_skip_img2img = False
 

@@ -5,16 +5,29 @@ from dataclasses import dataclass
 from functools import cached_property, partial
 from typing import Any, Literal, NamedTuple, Optional
 
-from pydantic import (
-    BaseModel,
-    Extra,
-    NonNegativeFloat,
-    NonNegativeInt,
-    PositiveInt,
-    confloat,
-    conint,
-    validator,
-)
+try:
+    from pydantic.v1 import (
+        BaseModel,
+        Extra,
+        NonNegativeFloat,
+        NonNegativeInt,
+        PositiveInt,
+        confloat,
+        conint,
+        validator,
+    )
+except ImportError:
+    from pydantic import (
+        BaseModel,
+        Extra,
+        NonNegativeFloat,
+        NonNegativeInt,
+        PositiveInt,
+        confloat,
+        conint,
+        validator,
+    )
+
 
 
 @dataclass

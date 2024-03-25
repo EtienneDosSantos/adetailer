@@ -14,9 +14,8 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 import gradio as gr
 import torch
-from PIL import Image
+from PIL import Image, ImageChops
 from rich import print
-from torchvision.transforms.functional import to_pil_image
 
 import modules
 from adetailer import (
@@ -27,24 +26,24 @@ from adetailer import (
     ultralytics_predict,
 )
 from adetailer.args import ALL_ARGS, BBOX_SORTBY, ADetailerArgs, SkipImg2ImgOrig
-from adetailer.common import PredictOutput
+from adetailer.common import PredictOutput, ensure_pil_image
 from adetailer.mask import (
     filter_by_ratio,
     filter_k_largest,
+    has_intersection,
+    is_all_black,
     mask_preprocess,
     sort_bboxes,
 )
 from adetailer.traceback import rich_traceback
 from adetailer.ui import WebuiInfo, adui, ordinal, suffix
 from controlnet_ext import (
+    CNHijackRestore,
     ControlNetExt,
+    cn_allow_script_control,
     controlnet_exists,
     controlnet_type,
     get_cn_models,
-)
-from controlnet_ext.restore import (
-    CNHijackRestore,
-    cn_allow_script_control,
 )
 from modules import images, paths, safe, script_callbacks, scripts, shared
 from modules.devices import NansException
@@ -56,6 +55,14 @@ from modules.processing import (
 )
 from modules.sd_samplers import all_samplers
 from modules.shared import cmd_opts, opts, state
+
+try:
+    from modules.processing import create_binary_mask
+except ImportError:
+
+    def create_binary_mask(image: Image.Image):
+        return image.convert("L")
+
 
 if TYPE_CHECKING:
     from fastapi import FastAPI

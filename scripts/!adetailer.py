@@ -583,27 +583,24 @@ class AfterDetailerScript(scripts.Script):
         sortby_idx = BBOX_SORTBY.index(sortby)
         return sort_bboxes(pred, sortby_idx)
 
-    def pred_preprocessing(self, pred: PredictOutput, args: ADetailerArgs):
+    def pred_preprocessing(self, p, pred: PredictOutput, args: ADetailerArgs):
         pred = filter_by_ratio(
             pred, low=args.ad_mask_min_ratio, high=args.ad_mask_max_ratio
         )
         pred = filter_k_largest(pred, k=args.ad_mask_k_largest)
         pred = self.sort_bboxes(pred)
-        return mask_preprocess(
+        masks = mask_preprocess(
             pred.masks,
             kernel=args.ad_dilate_erode,
             x_offset=args.ad_x_offset,
             y_offset=args.ad_y_offset,
             merge_invert=args.ad_mask_merge_invert,
         )
-
-    @staticmethod
-    def ensure_rgb_image(image: Any):
-        if not isinstance(image, Image.Image):
-            image = to_pil_image(image)
-        if image.mode != "RGB":
-            image = image.convert("RGB")
-        return image
+        
+        if self.is_img2img_inpaint(p) and not self.is_inpaint_only_masked(p):
+            image_mask = self.get_image_mask(p)
+            masks = self.inpaint_mask_filter(image_mask, masks)
+        return masks
 
     @staticmethod
     def i2i_prompts_replace(
@@ -655,7 +652,30 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def is_img2img_inpaint(p) -> bool:
-        return hasattr(p, "image_mask") and bool(p.image_mask)
+        return hasattr(p, "image_mask") and p.image_mask is not None
+
+    @staticmethod
+    def is_inpaint_only_masked(p) -> bool:
+        return hasattr(p, "inpaint_full_res") and p.inpaint_full_res
+
+    @staticmethod
+    def inpaint_mask_filter(
+        img2img_mask: Image.Image, ad_mask: list[Image.Image]
+    ) -> list[Image.Image]:
+        return [mask for mask in ad_mask if has_intersection(img2img_mask, mask)]
+
+    @staticmethod
+    def get_image_mask(p) -> Image.Image:
+        mask = p.image_mask
+        if p.inpainting_mask_invert:
+            mask = ImageChops.invert(mask)
+        mask = create_binary_mask(mask)
+
+        if getattr(p, "_ad_skip_img2img", False):
+            width, height = p.init_images[0].size
+        else:
+            width, height = p.width, p.height
+        return images.resize_image(p.resize_mode, mask, width, height)
 
     def _postprocess_image_inner(
         self, p, pp, args: ADetailerArgs, *, n: int = 0
